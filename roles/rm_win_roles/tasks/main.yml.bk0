@@ -1,0 +1,57 @@
+---
+#tasks file for rm_win_roles
+- name: Remove roles and features that prevent OS upgrade
+  block:
+    - name: Identity Mamagement for UNIX components
+      #raw: 'dism.exe /online /disable-feature /featurename:adminui'
+      win_command: 'dism.exe /online /disable-feature /featurename:adminui'
+#      win_command: 'dism.exe /online /disable-feature /featurename:adminui /quiet'
+      register: dism_output
+      changed_when: true
+      failed_when: "dism_output.rc != 0 and dism_output.rc != 3010 and dism_output.rc != 1641"
+
+
+    - name: Warn logged in users of in-pending upgrade
+      win_msg:
+        display_seconds: 30
+        msg: Automated upgrade about to start. Please save your work and log off before EOH!
+      when: dism_output is changed
+ 
+    - name: reboot after disabling IdMgmtUNIX
+      win_reboot:
+         msg: "OS requests reboot. Rebooting..."
+         reboot_timeout: 360
+         post_reboot_delay: 360
+      when: dism_output is changed
+
+# Remove-WindowsFeature RSAT-NIS using powershell as admin.
+    - name: Remove RSAT-NIS remaining
+      win_shell: Remove-WindowsFeature RSAT-NIS
+
+  when: 
+    - ansible_facts['os_family'] == "Windows"
+    - ansible_facts['distribution_version'] == '6.3.9600.0'
+
+- name: Remove roles and features that prevent 2008 upgrade
+  block:
+    #- name: Remote Desktop Services on 2008
+      #win_shell: Remove-WindowsFeature -name Remote-Desktop-Services
+      #win_shell: Get-WindowsFeature Remote-Desktop* | Remove-WindowsFeature
+
+    - name: Remove Remote Desktop Services on 2008
+      win_feature:
+        name: Remote-Desktop-Services
+        state: absent
+        include_sub_features: yes
+        include_management_tools: yes
+      register: rd_win_feature
+
+    - name: Reboot if uninstalling Remote-Desktop-Services feature requires it
+      win_reboot:
+      when: rd_win_feature.reboot_required
+
+  when: 
+    - ansible_facts['os_family'] == "Windows"
+    - ansible_facts['distribution_version'] == '6.1.7601.65536'
+
+

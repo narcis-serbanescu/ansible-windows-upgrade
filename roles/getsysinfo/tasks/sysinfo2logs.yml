@@ -1,0 +1,59 @@
+---
+#tasks file for cleanup_before
+- name: Cleanup before upgrade
+  block:
+    - name: Copy Powershell files from local
+      win_copy:
+        src: '{{ scripts_location }}/{{ item }}'
+        dest: '{{ src }}\'
+      with_items:
+        - FreeArchLog.ps1
+        - CleanWin.ps1
+
+    - win_shell: '{{ src }}\FreeArchLog.ps1 >> {{ src }}\FreeArchLog.log'
+    - win_shell: '{{ src }}\CleanWin.ps1 >> {{ src }}\CleanWin.log'
+
+    - name: Display CleanWin log file contents
+      win_shell: get-content {{ src }}\CleanWin.log
+      register: CleanWin
+    - debug: var=CleanWin.stdout_lines  
+
+    - name: Copy TSM file
+      win_copy:
+        src: C:\Program Files\Tivoli\TSM\baclient\dsm.opt
+        dest: '{{ src }}\dsm.opt'
+        remote_src: yes
+
+    - name: Create '{{ dst }}' directory 
+      win_file:
+        path: '{{ dst }}'
+        state: directory
+
+    - name: Copy folder contents recursively
+      win_copy:
+        src: '{{ src }}\'
+        dest: '{{ dst }}'
+        remote_src: yes
+
+    - name: Copy folder contents recursively
+      win_copy:
+        src: C:\Users\rozz01cs\Downloads\
+        dest: '{{ dst }}'
+        remote_src: yes
+
+    - name: Ansible zip directory 
+      win_command: "7z.exe a E:\\{{ inventory_hostname_short }}.zip {{ dst }}"
+      args:
+        chdir: C:\Program Files\7-Zip
+
+    - name: Specifying a local path directly
+      fetch:
+        src: 'E:\\{{ inventory_hostname_short }}.zip'
+        dest: "/tmp/sysinfo-{{ inventory_hostname_short }}.zip"
+        flat: yes
+
+    - name: Get drive C info
+      win_command: 'fsutil volume diskfree {{ drive }}'
+      register: driveCfree
+    - debug: var=driveCfree.stdout_lines
+

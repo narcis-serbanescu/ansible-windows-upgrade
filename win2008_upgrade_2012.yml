@@ -1,0 +1,6 @@
+---
+- hosts: Q71
+  gather_facts: True
+  roles:
+    - { role: win2008_upgrade_2012, when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.1.7601.65536'" }
+

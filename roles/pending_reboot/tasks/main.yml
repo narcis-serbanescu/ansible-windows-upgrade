@@ -1,0 +1,28 @@
+---
+#tasks file for pending_reboot
+- name: Checking for pending reboot
+
+  block:
+    - name: Copy PendingRebootV2.ps1 from local computer
+      win_copy:
+#        src: /home/snarcis/src/cms_git/PhysInfra-Tribe-Tracker/scripts/Windows/PendingRebootV2.ps1
+        src: '{{ scripts_location }}/PendingRebootV2.ps1'
+        dest: '{{ src }}\PendingRebootV2.ps1'
+
+    - win_shell: '{{ src }}\PendingRebootV2.ps1'
+      register: PendingReboot
+    - debug: var=PendingReboot.stdout_lines
+
+    - name: Warn logged in users of impending upgrade
+      win_msg:
+        display_seconds: 60
+        msg: Automated upgrade about to start. Please save your work and log off before EOH!
+      when: PendingReboot.stdout.find("True") != -1
+ 
+    - name: reboot after running PendingReboot
+      win_reboot:
+         msg: "OS requests reboot. Rebooting..."
+         reboot_timeout: 3600
+         post_reboot_delay: 720
+      when: PendingReboot.stdout.find("True") != -1
+

@@ -1,0 +1,4 @@
+---
+# defaults file for 7zip_install
+sevenzip_uninstall: no
+

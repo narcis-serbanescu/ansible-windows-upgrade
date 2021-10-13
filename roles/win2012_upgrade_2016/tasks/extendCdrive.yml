@@ -1,0 +1,22 @@
+---
+- name: Extend system C drive
+  block:
+   - name: Get drive C info
+     win_command: 'fsutil volume diskfree {{ drive }}'
+     register: driveCfree
+   - debug: var=driveCfree.stdout_lines
+
+   - name: Extend C drive to it's maximum size and change it's drive letter to C
+     win_partition:
+       # drive_letter: C
+       drive_letter: "{{ drive[0] }}"
+       partition_size: -1
+#       partition_number: 1
+       disk_number: 0
+
+   - name: Get drive C info
+     win_command: 'fsutil volume diskfree {{ drive }}'
+     register: driveCfree
+   - debug: var=driveCfree.stdout_lines
+
+

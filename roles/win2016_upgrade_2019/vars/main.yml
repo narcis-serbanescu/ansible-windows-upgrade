@@ -1,0 +1,20 @@
+---
+# vars file for win2012_upgrade_2019
+win_srv_start:
+  - bits
+  - wuauserv
+  - netlogon
+
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"
+src: C:\win_upgrade
+iso_src: "{{ src }}\\ISO"
+scripts_location: "{{ role_path }}/files"
+# ir_sds: 146.89.169.235
+# ir_sds: 130.103.51.73 #USRDS8
+ir_sds: 130.103.49.69 #USRDS9
+
+sr_sds: 146.89.141.138
+# iso2019: "\\\\{{ sr_sds }}\\sds\\local\\sceplus\\infra\\vmware\\Windows_Images\\en_windows_server_2019_updated_march_2019_x64_dvd_2ae967ab.iso"
+# iso2019: "\\\\{{ ir_sds }}\\sds\\local\\scepng\\infra\\Windows\\en_windows_server_2019_updated_march_2019_x64_dvd_2ae967ab.iso" # 2.x
+iso2019: '\\{{ ir_sds }}\sds\local\scepng\infra\Windows\en_windows_server_2019_updated_march_2019_x64_dvd_2ae967ab.iso'
+

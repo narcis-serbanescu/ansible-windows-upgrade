@@ -1,0 +1,14 @@
+---
+# tasks file for sdelete
+- name: Extract SDelete.zip using 7zip when Windows Server 2008 R2
+  win_command: "7z.exe x -y -o{{ src }}\\SDelete {{ src }}\\SDelete.zip"
+  args:
+    chdir: C:\Program Files\7-Zip
+
+- name: Uninstall 7zip
+  win_package:
+    path: "{{ src }}\\7z1900-x64.msi"
+    state: absent
+  # when: sevenzip_uninstall
+  #  when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] != '6.1.7601.65536'"
+

@@ -1,0 +1,12 @@
+---
+#tasks file for win2012_upgrade_2019
+- name: Copy and mount Wndows Server 2019 ISO
+  import_tasks: pre_upgrade.yml
+- name: Run Windows Server 2019 OS upgrade
+  import_tasks: upgrade.yml
+- name: Wait for system to become reachable over WinRM after OS upgrade
+  wait_for_connection:
+     timeout: 1800
+- name: Cleanup Wndows Server 2019
+  import_tasks: post_upgrade.yml
+

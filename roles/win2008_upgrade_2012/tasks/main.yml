@@ -1,0 +1,61 @@
+---
+# tasks file for win2008_upgrade_2012
+- name: Upgrade to Windows Server 2012 
+  block:
+    # Disable Firewall by turning off profiles
+    - name: Disable Firewall by turning off all profiles
+      win_command: "netsh advfirewall set allprofiles state off"
+
+    - name: Create '{{ iso_src}}' directory
+      win_file:
+        path: '{{ iso_src }}'
+        state: directory				
+
+    - name: Copy config files from local
+      win_copy:
+        src: '{{ scripts_location }}/{{ item }}'
+        dest: '{{ iso_src }}\'
+      with_items:
+        - unattend.xml
+        - ConfigureRemotingForAnsible.ps1
+          #- 7z1900-x64.msi
+
+    - name: Copy 2012 ISO file from SDS NIM
+      win_copy:
+        src: '{{ iso2012 }}'
+        dest: '{{ iso_src }}\\{{ iso2012file }}'
+        remote_src: yes
+      become: yes
+      become_method: runas
+      become_user: Administrator
+
+    ## Install 7zip
+    #- name: Install 7 zip
+    #  win_package:
+    #    path: "{{ iso_src }}\\7z1900-x64.msi"
+    #    state: present
+    #  when: not sevenzip_uninstall
+
+    # Extract 2012 iso content
+    - name: Extract 2012 iso content
+      win_command: "7z.exe x -y -o{{ iso_src }} {{ iso_src }}\\{{ iso2012file }}"
+      args:
+        chdir: C:\Program Files\7-Zip
+
+    # Uninstall 7zip
+    - name: Unnstall 7 zip
+      win_package:
+        path: "{{ src }}\\7z1900-x64.msi"
+        state: absent
+      # when: sevenzip_uninstall
+
+    - name: Run installer from mounted ISO
+      win_package:
+        path: '{{ iso_src }}\\setup.exe'
+        product_id: '{f6f0a7e4-ce2c-4dbf-9914-15a91263d2e3}'
+        arguments:
+        - '/unattend:{{ iso_src }}\unattend.xml /EMSPort:COM2 /emsbaudrate:115200'        
+        state: present
+  when: 
+    - ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '6.1.7601.65536'
+

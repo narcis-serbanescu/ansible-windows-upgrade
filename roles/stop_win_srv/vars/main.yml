@@ -1,0 +1,11 @@
+---
+#vars file for stop_win_srv
+win_srv:
+  - bits
+    # - mpssvc
+  - wuauserv
+
+other_srv:
+  - BESclient
+  - SepMasterService
+

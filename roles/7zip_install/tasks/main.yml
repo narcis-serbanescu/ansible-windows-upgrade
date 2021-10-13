@@ -1,0 +1,21 @@
+---
+# tasks file for 7zip_install
+- name: 7zip_install
+  block:
+   - name: Copy 7zip tool
+     win_copy:
+       src: '{{ scripts_location }}/7z1900-x64.msi'
+       dest: '{{ src }}\7z1900-x64.msi'
+
+   # Install 7zip
+   - name: Install 7 zip
+     win_package:
+       path: "{{ src }}\\7z1900-x64.msi"
+       state: present
+
+#   - name: Remove 7z1900-x64.msi
+#     win_file:
+#       path: '{{ src }}\7z1900-x64.msi'
+#       state: absent
+
+  when: not sevenzip_uninstall

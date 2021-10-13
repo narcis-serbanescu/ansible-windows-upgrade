@@ -1,0 +1,23 @@
+---
+#tasks file for getsysinfo
+- name:  Get system info and clean logs
+  block:
+    - name: Get system info
+      import_tasks: sysinfo.yml
+
+    - name: Get drive C info
+      win_command: 'fsutil volume diskfree {{ drive }}'
+      register: driveCfree
+    - debug: var=driveCfree.stdout_lines
+
+    - name: Get system infos
+      win_ping:
+    - raw: "{{ item }}"
+      with_items: [hostname, systeminfo, ipconfig /all, route print]
+      register: output
+    - debug: var=output
+    - debug: msg="{{ output.results[0].stdout_lines }}"
+
+    - name: Get system info logs
+      import_tasks: sysinfo2logs.yml
+

@@ -1,0 +1,6 @@
+---
+# tasks file for sep_uninstall
+# https://knowledge.broadcom.com/external/article?legacyId=TECH102470
+
+- name: Install SEP 
+  import_tasks: SEP_uninstall.yml

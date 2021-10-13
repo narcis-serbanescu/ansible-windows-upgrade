@@ -1,0 +1,7 @@
+---
+#tasks file for rm_win_roles
+- name: Remove roles and features that prevent 2008 upgrade
+  import_tasks: roles2008.yml
+- name: Remove roles and features that prevent 2012 upgrade
+  import_tasks: roles2012.yml
+

@@ -1,0 +1,20 @@
+---
+- hosts: Q71
+  gather_facts: True
+  roles:
+    - win_version
+#    - { role: local_user, when: "ansible_facts['os_family'] == 'Windows'" }
+#    - { role: stop_win_srv, when: "ansible_facts['os_family'] == 'Windows'" }
+#    - getsysinfo
+    - { role: pending_reboot, when: "ansible_facts['os_family'] == 'Windows'" }
+#    - { role: cleanup_before, when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.3.9600.0'" }
+#    - { role: rm_win_roles, when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.3.9600.0'" }
+#    - { role: local_user, when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.3.9600.0'" }
+#    - { role: win_cleanup, when: "ansible_facts['os_family'] == 'Windows'" }
+#    - { role: cleanmgr, when: "ansible_facts['os_family'] == 'Windows'" }
+#    - { role: start_win_srv, when: "ansible_facts['os_family'] == 'Windows'" }
+#    - { role: health_checks, when: "ansible_facts['os_family'] == 'Windows'" }
+#    - { role: bes_uninstall, when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.1.7601.65536'" }
+#    - { role: bes_install, when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.1.7601.65536'" }
+    - { role: win2012_upgrade_2019 }
+

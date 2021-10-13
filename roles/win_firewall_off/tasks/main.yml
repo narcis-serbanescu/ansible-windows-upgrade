@@ -1,0 +1,10 @@
+---
+# tasks file for win_firewall_off https://docs.ansible.com/ansible/latest/modules/win_firewall_module.html
+- name: Disable firewall for Domain, Public and Private profiles
+  win_firewall:
+    state: disabled
+    profiles:
+    - Domain
+    - Private
+    - Public
+  tags: disable_firewall

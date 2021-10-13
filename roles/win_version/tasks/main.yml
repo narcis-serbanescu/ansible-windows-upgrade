@@ -1,0 +1,14 @@
+---
+#tasks file for win_version
+- name: Gather facts for first time
+  setup:
+
+- name: Get Windows OS version
+  win_reg_stat:
+    path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion
+    name: ProductName
+  register: current_version
+- debug: var=current_version.value
+
+- debug:
+    msg: "{{ ansible_facts['distribution_version'] }}"

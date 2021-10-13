@@ -1,0 +1,10 @@
+---
+#vars file for start_win_srv
+win_srv:
+  - bits
+  - wuauserv
+
+other_srv:
+  - BESclient
+  - SepMasterService
+

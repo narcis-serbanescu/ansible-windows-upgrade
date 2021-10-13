@@ -1,0 +1,7 @@
+---
+#vars file for pending_reboot
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"
+src: C:\win_upgrade
+# src: "C:\\{{ inventory_hostname_short }}"
+# scripts_location: files/
+scripts_location: "{{ role_path }}/files"

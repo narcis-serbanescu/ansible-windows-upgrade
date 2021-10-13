@@ -1,0 +1,75 @@
+# ==================================================================
+# collect hostname and ip address information
+# ==================================================================
+- name: collect hostname
+  win_shell: >
+    $sysinfo=Get-WmiObject -Class win32_computersystem;
+    $server="{0}.{1}" -f $sysinfo.Name, $sysinfo.domain;
+    $server
+  register: FQDN_hostname
+  ignore_errors: true
+
+- name: set output
+  set_fact:
+   FQDN_hostname: "{{ FQDN_hostname.stdout_lines | join }}"
+
+- block:
+   - debug:
+      msg:
+              - "The FQDN hostname is: {{ FQDN_hostname }}"
+
+
+# ==================================================================
+# Get OS information
+# ==================================================================
+#- name: "Get Operating Systerm version information"
+#  win_shell: (get-WMIobject win32_operatingsystem).Name
+#  register: Win_os_ver_out
+#  ignore_errors: true
+#- name: "set output variable"
+#  set_fact:
+#   Win_os_ver_out="{{ Win_os_ver_out.stdout_lines|list|join }}"
+#
+#- name: "Check and ensure wndows operating system version is 2016"
+#  fail:
+#   msg: "This server is NOT a windows 2016 server: {{ Win_os_ver_out }}"
+#   # when: windows_ver not in Win_os_ver_out
+#  when: " {{  windows_ver }} not in Win_os_ver_out"
+#  with_items:
+#    - "{{ windows_ver }}"
+#
+#- block:
+#   - debug:
+#      msg:
+#       - "This server IS a windows 2016 server: {{ Win_os_ver_out }}"
+#  # when: windows_ver in Win_os_ver_out
+#  when: windows_ver in Win_os_ver_out
+
+
+
+# ==================================================================
+# Get server role information
+# ==================================================================
+- name: "Get server role information"
+  win_shell: wmic.exe Computersystem get DomainRole
+  register: DomainR_out
+  ignore_errors: true
+
+- name: "set output variable"
+  set_fact:
+   DomainR_out: "{{ DomainR_out.stdout|regex_search(regexp,'\\1')|list|join }}"
+  vars:
+   regexp: 'DomainRole\s+(\d+)'
+
+- block:
+   - debug:
+      msg:
+       - "The DomainRole is NOT a Backup DC or a DC: '{{ DomainR_out }}'."
+  when: DomainR_out != "4" and DomainR_out != "5"
+
+- block:
+   - debug:
+      msg:
+       - "The DomainRole is a Backup DC or a DC:'{{ DomainR_out }}'."
+  when: DomainR_out == "4" or DomainR_out == "5"
+

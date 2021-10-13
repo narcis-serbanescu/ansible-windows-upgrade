@@ -1,0 +1,39 @@
+---
+- name: SEP
+  block:
+   - name: Run SEP unmanaged silently
+     win_package: 
+       path: "{{ src }}\\SEP\\{{ sep_exe_file }}"
+       product_id: '{A0CFB412-0C01-4D2E-BAC9-3610AD36B4C8}'
+       #arguments: /s /v"/QN /L*V C:\win_upgrade\SEP\sep_log.txt"
+       arguments: '/s /v"/QN /L*V {{ src }}\\SEP\\sep_log.txt"'
+     register: CMAS_SEP_UNMGD_Client
+
+   - name: reboot after installing CMAS_SEP_UNMGD_Client
+     win_reboot:
+       test_command: 'exit (Get-Service -Name SepMasterService).Status -ne "Running"'
+     when: CMAS_SEP_UNMGD_Client.reboot_required
+
+
+   - name: Run SylinkDrop.exe silently
+     win_command: "sylinkdrop.exe /silent {{ src }}\\SEP\\{{ sep_sylink_file }}"
+     register: Sylink
+     args:
+       chdir: "{{ src }}\\SEP\\SEP Tools 14.2.1\\SylinkDrop"
+
+   - name: reboot after adding Sylink
+     win_reboot:
+       # test_command: 'exit (Get-Service -Name Netlogon).Status -ne "Running"'
+       test_command: 'exit (Get-Service -Name SepMasterService).Status -ne "Running"'
+     when: Sylink is changed
+
+   - name: Remove 7zip and SEP installation files
+     win_file:
+       path: "{{ src }}\\{{ item }}"
+       state: absent
+     with_items:
+         - 7z1900-x64.msi
+         - SEP   
+
+
+

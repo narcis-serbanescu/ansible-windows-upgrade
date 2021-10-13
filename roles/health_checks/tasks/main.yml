@@ -1,0 +1,62 @@
+---
+#tasks file for health_checks
+- name: Run sfc on all Windows Platforms
+  raw: 'sfc /scannow >> {{ home }}\Downloads\sfc.log'
+
+- name: Few health related checks on WS2008
+  block:
+    - name: Run chkdsk on C drive 2008
+      raw: 'chkdsk {{ drive }} /F /R  >> {{ home }}\Downloads\chkdsk_C.log'
+
+    - name: Run defrag on C drive
+      raw: 'defrag {{ drive }} /A /V  >> {{ home }}\Downloads\defrag_C.log'
+  when: (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '6.1.7601.65536')
+
+- name: Few health related checks on 2012, 2016, 2019
+  block:
+    - name: Run chkdsk on C drive
+      raw: 'chkdsk {{ drive }} /scan >> {{ home }}\Downloads\chkdsk_C.log'
+
+#    - name: display sfc.log file contents
+#      win_shell: get-content {{ home }}\Downloads\sfc.log
+#      register: sfc
+#    - debug: var=sfc.stdout_lines  
+    
+#    - name: display chkdsk_C.log file contents
+#      win_shell: get-content {{ home }}\Downloads\chkdsk_C.log
+#      register: chkdsk
+#    - debug: var=chkdsk.stdout_lines  
+
+    - name: see if Optimize-Volume cmdlet is available
+      win_command: powershell.exe "Get-Command -Name Optimize-Volume"
+      register: pri_cleanup_defrag_cmdlet
+      failed_when: False
+
+    - name: defrag C with PS cmdlet
+      win_command: powershell.exe "Optimize-Volume -DriveLetter {{ drive[0] }} -Defrag -Verbose"
+      when: pri_cleanup_defrag_cmdlet.rc == 0 
+
+    - name: run dism
+      win_command: c:\windows\system32\Dism.exe /Online /Cleanup-Image /RestoreHealth
+  when: (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '6.3.9600.0') or
+        (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '10.0.14393.0') or
+        (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '10.0.17763.0')
+
+- name: Rename log files
+  block:
+    - name: Add Time and Date To Local Log File
+      win_shell: |
+        $Date = (Get-Date).tostring("MM.dd.yyyy-hh.mm.ss")            
+        Rename-Item -Path {{ item }} -NewName {{ item }}_$Date.log -Force
+      with_items:
+        - '{{ home }}\Downloads\sfc.log'
+        - '{{ home }}\Downloads\chkdsk_C.log'
+        - '{{ home }}\Downloads\defrag_C.log'
+
+
+- name: Get drive C info
+  win_command: 'fsutil volume diskfree {{ drive }}'
+  register: driveCfree
+- debug: var=driveCfree.stdout_lines
+
+

@@ -1,0 +1,34 @@
+---
+# tasks file for local_user
+- name: Enable local users Administrator, osadmin
+  win_user:
+    name: '{{ item }}'
+    password: '{{ pass_word }}'
+    state: present
+    account_disabled: no
+    account_locked: no
+    groups:
+      - Administrators
+  with_items:
+    - Administrator
+    - osadmin
+
+- name: Ensure users Administrator and osadmin are enabled
+  win_command: "net user {{ item }}"
+  register: local_user
+  with_items:
+    - Administrator
+    - osadmin
+
+# https://stackoverflow.com/questions/29635627/register-variables-in-loop-in-an-ansible-playbook
+- debug: var=local_user
+
+- debug: msg="item.item={{item.item}}, item.stdout={{item.stdout}}, item.changed={{item.changed}}"
+  with_items: "{{ local_user.results}}"
+
+
+#- debug: msg="Gets printed only if this item changed - {{item}}"
+#  when: "{{item.changed == true}}"
+#  with_items: "{{local_user.results}}"
+
+

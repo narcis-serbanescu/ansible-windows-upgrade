@@ -1,0 +1,7 @@
+---
+# vars file for sdelete
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"
+src: C:\win_upgrade
+iso_src: "{{ src }}\\ISO"
+scripts_location: "{{ role_path }}/files"
+

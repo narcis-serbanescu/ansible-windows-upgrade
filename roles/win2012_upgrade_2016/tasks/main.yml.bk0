@@ -1,0 +1,43 @@
+---
+# tasks file for win2012_upgrade_2016
+- name: Mounting Windows Server 2016 ISO file
+  block:
+    - name: Create '{{ iso_src}}' directory
+      win_file:
+        path: '{{ iso_src }}'
+        state: directory				
+
+    - name: Copy config files from local
+      win_copy:
+        src: '{{ scripts_location }}/{{ item }}'
+        dest: '{{ iso_src }}\'
+      with_items:
+        - setupcomplete.cmd
+        - ConfigureRemotingForAnsible.ps1
+
+    - name: Copy 2K19 ISO file from SDS NIM
+      win_copy:
+        src: '{{ iso2016 }}'
+        dest: '{{ iso_src }}\\en_windows_server_2016.iso'
+        remote_src: yes
+      become: yes
+      become_method: runas
+      become_user: Administrator
+
+    # Run installer from mounted ISO, then unmount
+    - name: Ensure an ISO is mounted
+      win_disk_image:
+        image_path: '{{ iso_src }}\\en_windows_server_2016.iso'
+        state: present
+      register: disk_image_out
+
+    - name: Run installer from mounted ISO
+      win_package:
+        path: '{{ disk_image_out.mount_paths[0] }}setup.exe'
+        product_id: '{f6f0a7e4-ce2c-4dbf-9914-15a91263d2e3}'
+        arguments:
+        - '/quiet /auto upgrade /dynamicupdate disable /migratedrivers all /showoobe none /pkey CB7KF-BWN84-R7R2Y-793K2-8XDDG /imageindex 4 /compat ignorewarning /postoobe {{ iso_src }}\setupcomplete.cmd'
+        state: present
+  when: 
+    - ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '6.3.9600.0'
+

@@ -1,0 +1,7 @@
+---
+#vars file for health_checks
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"
+src: C:\win_upgrade
+scripts_location: files/
+home: "{{ ansible_facts['env']['USERPROFILE'] }}"
+

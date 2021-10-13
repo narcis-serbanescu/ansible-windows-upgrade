@@ -1,0 +1,44 @@
+---
+- name: Create "{{ src }}\SEP" directory 
+  win_file:
+    path: "{{ src }}\\SEP"
+    state: directory				
+
+- name: Copy SEP client from SDS NIM
+  win_copy:
+    src: "{{ sep_exe }}"
+    dest: "{{ src }}\\SEP\\{{ sep_exe_file }}"
+    remote_src: yes
+  become: yes
+#  become_method: runas
+  become_user: rozz01cs 
+
+- name: Copy SEP Tools from SDS NIM
+  win_copy:
+    src: "{{ sep_tools }}"
+    dest: "{{ src }}\\SEP\\{{ sep_tools_file }}"
+    remote_src: yes
+  become: yes
+#  become_method: runas
+  become_user: rozz01cs 
+
+- name: 7zip install and extract in Windows Server 2008 R2 cases
+  import_tasks: 7zip_install.yml
+  when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.1.7601.65536'"
+
+- name: Unzip SEP Tools 14.2.1.zip
+  win_unzip:
+    src: "{{ src }}\\SEP\\{{ sep_tools_file }}"
+    dest: "{{ src }}\\SEP"
+  when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] != '6.1.7601.65536'"
+
+- name: Copy SEP Sylink file from SDS NIM
+  win_copy:
+    src: "{{ sep_sylink }}"
+    dest: "{{ src }}\\SEP\\{{ sep_sylink_file }}"
+    remote_src: yes
+  become: yes
+#  become_method: runas
+  become_user: rozz01cs 
+
+

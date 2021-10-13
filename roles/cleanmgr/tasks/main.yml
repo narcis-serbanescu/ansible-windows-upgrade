@@ -1,0 +1,45 @@
+---
+#tasks file for cleanmgr
+
+   - name: Get drive C info before CleanMgr
+     win_command: 'fsutil volume diskfree {{ drive }}'
+     register: driveCfree
+   - debug: var=driveCfree.stdout_lines
+      
+# https://github.com/jborean93/packer-windoze/blob/master/roles/cleanup-winsxs/tasks/cleanmgr.yml#L61-L79
+# Install-WindowsFeature Desktop-Experience
+   - name: Install Desktop-Experience feature on 2008 and 2012 if missing
+     block:
+     - name: Install Desktop-Experience
+       win_feature:
+         name: Desktop-Experience
+         state: present
+       register: win_feature
+
+     - name: Reboot if installing Desktop-Experience feature requires it
+       win_reboot:
+         msg: "INSTALLING Desktop-Experience. Rebooting ..."
+         post_reboot_delay: 360
+       when: win_feature.reboot_required
+     when: (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] >= '6.1.7601.0') or
+           (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '6.3.9600.0')
+
+   - name: run cleanmgr with everything set
+     block:
+     - name: set custom flags for cleanmgr run
+       win_shell: |
+         $volume_caches = Get-ChildItem -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches"
+         foreach ($volume_cache in $volume_caches) {
+             New-ItemProperty -Path $volume_cache.PSPath -Name StateFlags0666 -Value 2 -Type DWORD -Force | Out-Null
+         }
+     - name: run cleanmgr with custom flag
+       win_command: cleanmgr.exe /sagerun:666
+
+     always:
+     - name: clear custom flags after cleanmgr run
+       win_shell: |
+         $volume_caches = Get-ChildItem -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches"
+         foreach ($volume_cache in $volume_caches) {
+             Remove-ItemProperty -Path $volume_cache.PSPath -Name StateFlags0666 -Force | Out-Null
+         }
+

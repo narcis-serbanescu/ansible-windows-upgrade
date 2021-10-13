@@ -1,0 +1,13 @@
+# http://nokitel.im/index.php/2016/11/10/how-to-manage-windows-server-2016-with-ansible-active-directory/
+# ansible windows_server -i inventory.yml -m win_ping
+# ansible-playbook win_test -i inventory.yml
+[windows_server]
+usrd21q7130216.xxx.com
+
+[Q42]
+pnmanwin2k12189.xxx.com
+
+
+
+
+

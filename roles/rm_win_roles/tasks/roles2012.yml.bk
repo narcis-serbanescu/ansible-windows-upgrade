@@ -1,0 +1,34 @@
+---
+#tasks file for rm_win_roles
+- name: Remove roles and features that prevent OS upgrade
+  block:
+    - name: Identity Mamagement for UNIX components
+      #raw: 'dism.exe /online /disable-feature /featurename:adminui'
+      win_command: 'dism.exe /online /disable-feature /featurename:adminui'
+#      win_command: 'dism.exe /online /disable-feature /featurename:adminui /quiet'
+      register: dism_output
+      changed_when: true
+      failed_when: "dism_output.rc != 0 and dism_output.rc != 3010 and dism_output.rc != 1641"
+
+
+    - name: Warn logged in users of in-pending upgrade
+      win_msg:
+        display_seconds: 30
+        msg: Automated upgrade about to start. Please save your work and log off before EOH!
+      when: dism_output is changed
+ 
+    - name: reboot after disabling IdMgmtUNIX
+      win_reboot:
+         msg: "OS requests reboot. Rebooting..."
+         reboot_timeout: 360
+         post_reboot_delay: 360
+      when: dism_output is changed
+
+# Remove-WindowsFeature RSAT-NIS using powershell as admin.
+    - name: Remove RSAT-NIS remaining
+      win_shell: Remove-WindowsFeature RSAT-NIS
+
+  when: 
+    - ansible_facts['os_family'] == "Windows"
+    - ansible_facts['distribution_version'] == '6.3.9600.0'
+

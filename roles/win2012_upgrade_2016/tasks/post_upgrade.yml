@@ -1,0 +1,57 @@
+---
+# tasks file for win2012_upgrade_2016
+- name: Cleanup
+  block:
+    - name: Remove '{{ src }}' folder
+      win_file:
+        path: '{{ src }}'
+        state: absent
+
+    - name: Set '{{ win_srv_start }}' startup mode to auto and ensure it is started
+      win_service:
+        name: "{{ item }}"
+        start_mode: auto
+        state: started
+      with_items:
+        - "{{ win_srv_start }}"
+
+    - name: get info on BESclient service
+      win_service:
+        name: besclient
+      register: besclient_service
+
+    - name: Start and enable BESclient service
+      win_service:
+        name: besclient
+        state: started
+        start_mode: delayed
+      when: besclient_service.exists
+
+    # tasks file for win_firewall_off https://docs.ansible.com/ansible/latest/modules/win_firewall_module.html
+    - name: Disable firewall for Domain, Public and Private profiles
+      win_firewall:
+        state: disabled
+        profiles:
+        - Domain
+        - Private
+        - Public
+      tags: disable_firewall
+
+    - name: Enable Disk Performance Counters
+      win_command: diskperf -Y
+      register: diskperf
+    - debug: var=diskperf.stdout_lines
+
+    - name: Adobe Flash Player for BES Console
+      win_command: 'dism /online /add-package /packagepath:"C:\Windows\servicing\Packages\Adobe-Flash-For-Windows-Package~31bf3856ad364e35~amd64~~10.0.14393.0.mum"'
+      register: dism_output
+      changed_when: true
+      failed_when: "dism_output.rc != 0 and dism_output.rc != 3010 and dism_output.rc != 1641"
+
+    - name: reboot after enabling Adobe Flash Player
+      win_reboot:
+      when: dism_output is changed
+
+#  when: 
+#    - ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '10.0.14393.0'
+

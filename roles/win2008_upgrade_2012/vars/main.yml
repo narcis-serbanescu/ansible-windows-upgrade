@@ -1,0 +1,10 @@
+---
+# vars file for win2012_upgrade_2019
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"
+src: C:\win_upgrade
+iso_src: "{{ src }}\\ISO"
+scripts_location: "{{ role_path }}/files"
+ir_sds: 146.89.169.235
+sr_sds: 146.89.141.138
+iso2012file: en_windows_server_2012_r2_with_update_x64_dvd_6052708.iso
+iso2012: "\\\\{{ sr_sds }}\\sds\\local\\sceplus\\infra\\vmware\\Windows_Images\\{{ iso2012file }}"

@@ -1,0 +1,25 @@
+---
+#tasks file for rm_win_roles @ 2008
+- name: Remove roles and features that prevent 2008 upgrade
+  block:
+    #- name: Remote Desktop Services on 2008
+      #win_shell: Remove-WindowsFeature -name Remote-Desktop-Services
+      #win_shell: Get-WindowsFeature Remote-Desktop* | Remove-WindowsFeature
+
+    - name: Remove Remote Desktop Services on 2008
+      win_feature:
+        name: Remote-Desktop-Services
+        state: absent
+        include_sub_features: yes
+        include_management_tools: yes
+      register: rd_win_feature
+
+    - name: Reboot if uninstalling Remote-Desktop-Services feature requires it
+      win_reboot:
+      when: rd_win_feature.reboot_required
+
+  when: 
+    - ansible_facts['os_family'] == "Windows"
+    - ansible_facts['distribution_version'] == '6.1.7601.65536'
+
+

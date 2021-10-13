@@ -1,0 +1,55 @@
+---
+# tasks file for sdelete
+- name: SDelete
+  block:
+   - name: Copy sdelete64 tool
+     win_copy:
+       src: '{{ scripts_location }}/SDelete.zip'
+       dest: '{{ src }}\SDelete.zip'
+
+   - name: Unzip SDelete.zip
+     win_unzip:
+        src: '{{ src }}\SDelete.zip'
+        dest: '{{ src }}\SDelete'
+     when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] != '6.1.7601.65536'"
+
+
+   - name: Include 7zip_install role when WIndows Server 2008 R2
+     include role:
+       name: 7zip_install
+     when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.1.7601.65536'"
+
+   - name: Extract SDelete.zip using 7zip when WIndows Server 2008 R2
+     win_command: "7z.exe x -y -o{{ src }}\\SDelete {{ src }}\\SDelete.zip"
+     args:
+       chdir: C:\Program Files\7-Zip
+     when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] == '6.1.7601.65536'"
+
+
+   - name: Run SDelete64.exe on C drive
+     # win_command: 'C:\users\rozz01cs\Downloads\SDelete\sdelete64.exe -accepteula -z {{ drive }} >> C:\users\rozz01cs\Downloads\SDelete\sdelete64.txt'
+     win_command: '{{ src }}\SDelete\sdelete64.exe -accepteula -z {{ drive }}'
+     register: sdelete
+   - debug: var=sdelete.stdout_lines  
+
+   - name: Remove sdelete64.exe, if present
+     win_file:
+       path: '{{ src }}\SDelete\sdelete64.exe'
+       state: absent
+
+   - name: Remove SDelete directory structure
+     win_file:
+       path: '{{ src }}\SDelete'
+       state: absent
+
+   - name: Uninstall 7zip
+     win_package:
+       path: "{{ src }}\\7z1900-x64.msi"
+       state: absent
+     # when: sevenzip_uninstall
+     when: "ansible_facts['os_family'] == 'Windows' and ansible_facts['distribution_version'] != '6.1.7601.65536'"
+
+
+  when: "ansible_facts['os_family'] == 'Windows'"
+
+

@@ -1,0 +1,24 @@
+---
+#tasks file for stop_win_srv
+- name: Stop Windows services
+  block:
+   - name: Stop '{{ win_srv }}' Windows services
+     win_service:
+       name: "{{ item }}"
+       start_mode: manual
+       state: stopped
+     with_items:
+       - "{{ win_srv }}"
+
+   - name: get info on BESclient service, SepMasterService
+     win_service:
+       name: besclient
+     register: besclient_service
+
+   - name: stop and disable BESclient service
+     win_service:
+       name: besclient
+       state: stopped
+       start_mode: manual
+     when: besclient_service.exists
+

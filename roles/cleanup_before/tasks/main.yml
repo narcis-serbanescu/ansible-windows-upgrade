@@ -1,0 +1,58 @@
+---
+#tasks file for cleanup_before
+- name: Cleanup before upgrade
+  block:
+    - name: Delete unattend file
+      win_shell: |
+        &cmd.exe /c Del /q C:\unattend*
+
+    - name: Ansible find and delete unattend file wildcard
+      win_find:
+        paths:
+        - '{{ drive }}'
+        - '{{ src }}'
+        patterns: [ '*.log', '*.xml' ]
+      register: wildcard_files_to_delete
+
+    - name: Ansible remove file wildcard
+      win_file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ wildcard_files_to_delete.files }}" 
+
+    - name: Copy Powershell files from local
+      win_copy:
+        src: '{{ scripts_location }}/{{ item }}'
+        dest: '{{ src }}\'
+      with_items:
+        - FreeArchLog.ps1
+        - CleanWin.ps1
+        - SetupPrep.ps1
+
+    - win_shell: '{{ src }}\FreeArchLog.ps1 >> {{ src }}\FreeArchLog.log'
+    - win_shell: '{{ src }}\CleanWin.ps1 >> {{ src }}\CleanWin.log'
+    - win_shell: '{{ src }}\SetupPrep.ps1'
+
+    - name: Display CleanWin log file contents
+      win_shell: get-content {{ src }}\CleanWin.log
+      register: CleanWin
+    - debug: var=CleanWin.stdout_lines  
+
+#    - name: Remove directory structure
+#      win_file:
+#        path: C:\tsm_images
+#        state: absent
+
+    - name: Remove directory structure
+      win_file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - C:\tsm_images
+        - C:\temp\ITM
+
+    - name: Get drive C info
+      win_command: 'fsutil volume diskfree {{ drive }}'
+      register: driveCfree
+    - debug: var=driveCfree.stdout_lines
+

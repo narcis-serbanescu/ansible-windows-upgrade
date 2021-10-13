@@ -1,0 +1,26 @@
+---
+# vars file for win2012_upgrade_2016
+win_srv_start:
+  - bits
+  - wuauserv
+  - netlogon
+
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"
+src: C:\win_upgrade
+# src: "C:\\{{ inventory_hostname_short }}"
+iso_src: "{{ src }}\\ISO"
+scripts_location: "{{ role_path }}/files"
+ir_sds: 146.89.169.235 #CMS1x & NL03
+# ir_sds: 158.87.29.79 #CMS1x US22
+# ir_sds: 146.89.186.69 # DEEH6
+sr_sds: 146.89.141.138
+ad_sds: chwtads021ccp8a
+# 2.x
+# ir_sds: 130.103.51.73 #USRDS8
+# ir_sds: 130.103.49.69 #USRDS9
+# iso2016: "\\\\{{ sr_sds }}\\sds\\local\\sceplus\\infra\\vmware\\Windows_Images\\en_windows_server_2016.iso"
+iso2016: "\\\\{{ ir_sds }}\\sds\\local\\sceplus\\infra\\vmware\\Windows_Images\\en_windows_server_2016.iso" # 1.x Stage
+# iso2016: "\\\\{{ ad_sds }}\\ISO\\en_windows_server_2016.iso"
+# 2.x
+# iso2016: "\\\\{{ ir_sds }}\\sds\\local\\scepng\\infra\\Windows\\en_windows_server_2016.iso" # 2.x
+# iso2016: "\\{{ ir_sds }}\sds\local\scepng\infra\Windows\en_windows_server_2016.iso"

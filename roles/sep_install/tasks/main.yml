@@ -1,0 +1,7 @@
+---
+# tasks file for sep_install
+- name: Copy and unzip SEP files
+  import_tasks: SEP_copy.yml
+
+- name: Install SEP 
+  import_tasks: SEP_install.yml

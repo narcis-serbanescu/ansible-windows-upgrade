@@ -1,0 +1,3 @@
+---
+#vars file for win_cleanup
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"

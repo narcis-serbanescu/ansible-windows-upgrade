@@ -1,0 +1,37 @@
+---
+# tasks file for win2012_upgrade_2019
+- name: Cleanup
+  block:
+    - name: Remove '{{ src }}' folder
+      win_file:
+        path: '{{ src }}'
+        state: absent
+
+    - name: Set '{{ win_srv_start }}' startup mode to auto and ensure it is started
+      win_service:
+        name: "{{ item }}"
+        start_mode: auto
+        state: started
+      with_items:
+        - "{{ win_srv_start }}"
+
+    - name: get info on BESclient service
+      win_service:
+        name: besclient
+      register: besclient_service
+
+    - name: Start and enable BESclient service
+      win_service:
+        name: besclient
+        state: started
+        start_mode: delayed
+      when: besclient_service.exists
+
+    - name: Enable Disk Performance Counters
+      win_command: diskperf -Y
+      register: diskperf
+    - debug: var=diskperf.stdout_lines
+
+#  when: 
+#    - ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '10.0.14393.0'
+

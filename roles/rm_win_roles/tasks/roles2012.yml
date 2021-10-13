@@ -1,0 +1,70 @@
+---
+#tasks file for rm_win_roles
+- name: Remove roles and features that prevent OS upgrade
+  block:
+
+    - name: Uninstall Telnet-Server
+      win_feature:
+        name: Telnet-Server
+        state: absent
+      register: winfeat_telnetserver
+
+    - name: Reboot if uninstalling Telnet-Server feature requires it
+      win_reboot:
+      when: winfeat_telnetserver.reboot_required
+
+    - name: State of Identity Mamagement for UNIX components AdminUI
+      #win_command: "Dism /online /get-features /format:table /| findstr AdminUI"
+      win_command: "Dism /online /get-featureinfo /FeatureName:AdminUI"
+      register: dism_adminui
+
+    - debug: var=dism_adminui
+    
+#    - name: Warn logged in users of in-pending upgrade
+#      win_msg:
+#        display_seconds: 30
+#        msg: Automated upgrade about to start. Please save your work and log off before EOH!
+#      #when: dism_output is changed
+#      #when: dism_adminui.stdout.find("Required") != -1 
+#      when: dism_adminui.stdout.find("Enabled") != -1
+ 
+
+    - name: Identity Mamagement for UNIX components AdminUI
+      #raw: 'dism.exe /online /disable-feature /featurename:adminui'
+#      win_command: 'dism.exe /online /disable-feature /featurename:adminui'
+      win_command: 'dism.exe /online /disable-feature /featurename:adminui /quiet'
+      register: dism_output
+      changed_when: true
+      failed_when: "dism_output.rc != 0 and dism_output.rc != 3010 and dism_output.rc != 1641"
+      when: dism_adminui.stdout.find("Enabled") != -1
+
+    - pause:
+        minutes: 10
+      when: dism_adminui.stdout.find("Enabled") != -1
+
+#    - name: Wait for system to become reachable over WinRM
+#      wait_for_connection:
+#        timeout: 900
+#      when: dism_adminui.stdout.find("Enabled") != -1
+
+    - name: Wait 900 seconds for RDP port 3389 to become open on the host, don't start checking for 10 seconds
+      win_wait_for:
+        port: 3389
+        delay: 10
+      when: dism_adminui.stdout.find("Enabled") != -1
+
+#    - name: reboot after disabling IdMgmtUNIX
+#      win_reboot:
+#         msg: "OS requests reboot. Rebooting..."
+#         reboot_timeout: 360
+#         post_reboot_delay: 360
+#      when: dism_output is changed
+
+# Remove-WindowsFeature RSAT-NIS using powershell as admin.
+    - name: Remove RSAT-NIS remaining
+      win_shell: Remove-WindowsFeature RSAT-NIS
+
+  when: 
+    - ansible_facts['os_family'] == "Windows"
+    - ansible_facts['distribution_version'] == '6.3.9600.0'
+

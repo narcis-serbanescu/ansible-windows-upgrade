@@ -1,0 +1,53 @@
+---
+#tasks file for win_cleanup
+  - name: cleanup directories
+    win_file:
+      state: absent
+      path: "{{ item }}"
+    ignore_errors: yes
+    with_items:
+      - C:\Windows\Temp\
+      - C:\Windows\Prefetch\
+      - C:\Windows\SoftwareDistribution\
+      - c:\windows\system32\WindowsPowerShell\v1.0\Modules\pester\
+
+  - name: Cleanup temp directories up all user accounts
+    win_shell: |
+      $tempfolders = @("C:\Documents and Settings\*\Local Settings\temp\*", "C:\Users\*\Appdata\Local\Temp\*", "C:R*\Local Settings\temp\*")
+      Remove-Item $tempfolders -ErrorAction SilentlyContinue -Force -Recurse
+
+  - name: Cleanup temp directories up all user accounts
+    win_shell: |
+      $winlogs = "C:\Windows\System32\winevt\Logs"
+      Get-ChildItem $winlogs -Filter Archive*.* -recurse |?{$_.PSIsContainer -eq $false -and $_.length -gt 1228}|?{Remove-Item $_.fullname } -ErrorAction SilentlyContinue
+
+  - name: Cleanup temp directories up all user accounts
+    win_shell: |
+      $cale = "C:\Windows\LOGS"
+      $Daysback = "-30"
+      Get-ChildItem $cale | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item -Recurse -ErrorAction SilentlyContinue
+      Write-Host =========================================================
+      Write-Host DONE! , checking the free space 
+
+
+
+  - name: run dism
+    win_command: c:\windows\system32\Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+    when: (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '6.3.9600.0') or
+          (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '10.0.14393.0') or
+          (ansible_facts['os_family'] == "Windows" and ansible_facts['distribution_version'] == '10.0.17763.0')
+
+  - name: cleanup windows features
+    win_shell: |
+      $moduleExist = Get-Module servermanager
+      if ($moduleExist){
+        import-module servermanager
+        Get-WindowsFeature | ? { $_.InstallState -eq 'Available' } | Uninstall-WindowsFeature -Remove
+      }
+
+
+  - name: Get drive C info
+    win_command: 'fsutil volume diskfree {{ drive }}'
+    register: driveCfree
+  - debug: var=driveCfree.stdout_lines
+

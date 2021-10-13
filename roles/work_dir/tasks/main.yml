@@ -1,0 +1,27 @@
+---
+#tasks file for work_dir
+- name: Folder structure
+  block:
+    - name: Create '{{ src }}' directory 
+      win_file:
+        path: '{{ src }}'
+        state: directory	
+
+    - name: Get cmd whoami
+      raw: whoami.exe
+      register: cmdwhoami
+    - debug: var=cmdwhoami.stdout_lines
+    - set_fact:
+        dom_user: "{{ cmdwhoami.stdout_lines }}"
+    - debug: msg="{{ dom_user }}"
+
+    - name: Give Domain User access to '{{ src }}'
+      win_acl:
+        path: '{{ src }}'
+        user: rtp\rozz01cs
+        # user: '{{ dom_user }}'
+        rights: FullControl
+        type: allow
+        state: present
+      tags: permission
+

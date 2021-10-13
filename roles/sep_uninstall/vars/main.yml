@@ -1,0 +1,15 @@
+---
+# vars file for sdelete
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"
+src: C:\win_upgrade
+scripts_location: "{{ role_path }}/files"
+ir_sds: 146.89.169.235
+sr_sds: 146.89.141.138
+sep_sds: "\\\\{{ sr_sds }}\\sds\\local\\sceplus\\agents\\Symantec"
+sep_exe_file: CMAS_SEP_UNMGD_Client_14.2.0MP1_WIN64Bit_11292018.exe
+sep_tools_file: SEP Tools 14.2.1.zip
+sep_sylink_file: Sylink_STG_Default.xml
+sep_exe: "{{ sep_sds }}\\SEP_Client\\{{ sep_exe_file }}"
+sep_tools: "{{ sep_sds }}\\SEP_Client\\{{ sep_tools_file }}"
+sep_sylink: "{{ sep_sds }}\\{{ sep_sylink_file }}"
+

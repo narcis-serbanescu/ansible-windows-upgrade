@@ -1,0 +1,32 @@
+---
+#tasks file for start_win_srv
+- name: Start Windows services
+
+  block:
+   - name: Set '{{ win_srv }}' startup mode to auto and ensure it is started
+     win_service:
+       name: "{{ item }}"
+       start_mode: auto
+       state: started
+     with_items:
+       - "{{ win_srv }}"
+
+
+   - name: get info on BESclient , SepMasterService service
+     win_service:
+       name: besclient
+     register: besclient_service
+
+   - name: Start and enable BESclient service
+     win_service:
+       name: besclient
+       state: started
+       start_mode: delayed
+     when: besclient_service.exists
+
+
+   - name: Enable Disk Performance Counters
+     win_command: diskperf -Y
+     register: diskperf
+   - debug: var=diskperf.stdout_lines
+

@@ -1,0 +1,3 @@
+---
+#vars file for cleanmgr
+drive: "{{ ansible_facts['env']['SystemDrive'] }}"

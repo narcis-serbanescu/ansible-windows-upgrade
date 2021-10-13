@@ -1,0 +1,4 @@
+---
+#vars file for work_dir
+src: C:\win_upgrade
+# src: "C:\\{{ inventory_hostname_short }}"
